@@ -1,7 +1,7 @@
 ######################################
 # target
 ######################################
-TARGET = ch32v203g6u6
+TARGET = ch32v203f8p6
 TARGET_DEFS = 
 
 ######################################
@@ -58,10 +58,10 @@ CH32V_firmware_library/Startup/startup_ch32v20x_D6.S
 #######################################
 # binaries
 #######################################
-PREFIX = riscv-none-embed-
+PREFIX = ./bin/riscv-none-embed-
 
 CC = $(PREFIX)gcc
-AS = $(PREFIX)gcc -x assembler-with-cpp
+AS = $(PREFIX)gcc -x assembler-with-cpp 
 CP = $(PREFIX)objcopy
 SZ = $(PREFIX)size
 
@@ -91,7 +91,7 @@ C_INCLUDES =  \
 -IUser
 
 # compile gcc flags
-ASFLAGS = $(MCU) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
+ASFLAGS = $(MCU) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections 
 
 CFLAGS = $(MCU) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
 

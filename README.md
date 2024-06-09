@@ -31,3 +31,5 @@ The default 'User' codes is 'GPIO_Toggle' example, the default system frequency 
 
 To build the project, type `make`.
 
+
+https://github.com/xpack-dev-tools/riscv-none-embed-gcc-xpack/releases/download/v10.2.0-1.2/xpack-riscv-none-embed-gcc-10.2.0-1.2-linux-arm64.tar.gz
