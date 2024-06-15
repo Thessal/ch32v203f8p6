@@ -1,131 +1,96 @@
-// /* @Note
-//  * Compatibility HID Example:
-//  * This program provides examples of the pass-through of USB-HID data and serial port
-//  *  data based on compatibility HID device. And the data returned by Get_Report request is
-//  *  the data sent by the last Set_Report request.Speed of UART1/2 is 115200bps.
-//  *
-//  * Interrupt Transfers:
-//  *   UART2_RX   ---> Endpoint2
-//  *   Endpoint1  ---> UART2_TX
-//  *
-//  *   Note that the first byte is the valid data length and the remaining bytes are
-//  *   the transmission data for interrupt Transfers.
-//  *
-//  * Control Transfers:
-//  *   Set_Report ---> UART1_TX
-//  *   Get_Report <--- last Set_Report packet
-//  *
-//  *  */
+/********************************** (C) COPYRIGHT *******************************
+ * File Name          : main.c
+ * Author             : WCH
+ * Version            : V1.0.0
+ * Date               : 2020/04/30
+ * Description        : Main program body.
+*********************************************************************************
+* Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
+* Attention: This software (modified or not) and binary are used for 
+* microcontroller manufactured by Nanjing Qinheng Microelectronics.
+*******************************************************************************/
 
-#include "debug.h"
-#include "usb_lib.h"
-#include "usb_desc.h"
-#include "hw_config.h"
-#include "usb_pwr.h"
-#include "usb_prop.h"
-#include "usbd_compatibility_hid.h"
-// /* Global define */
-
-
-// /* Global Variable */    
-
-// /*********************************************************************
-//  * @fn      Var_Init
-//  *
-//  * @brief   Software parameter initialization
-//  *
-//  * @return  none
-//  */
-void Var_Init(void)
-{
-    uint16_t i;
-    RingBuffer_Comm.LoadPtr = 0;
-    RingBuffer_Comm.StopFlag = 0;
-    RingBuffer_Comm.DealPtr = 0;
-    RingBuffer_Comm.RemainPack = 0;
-    for(i=0; i<DEF_Ring_Buffer_Max_Blks; i++)
-    {
-        RingBuffer_Comm.PackLen[i] = 0;
-    }
-}
-
-/*********************************************************************
- * @fn      GPIO_Toggle_INIT
- *
- * @brief   Initializes GPIOA.0
- *
- * @return  none
+/*
+ * @Note
+ * Composite Keyboard and Mouse Example:
+ * This example uses PB12-PB15 and PA4-PA7 to simulate keyboard key pressing and mouse
+ * movement respectively, active low.
+ * At the same time, it also uses USART2(PA3) to receive the specified data sent from
+ * the host to simulate the pressing and releasing of the following specific keyboard
+ * keys. Data is sent in hexadecimal format and 1 byte at a time.
+ * 'W' -> 0x1A
+ * 'A' -> 0x04
+ * 'S' -> 0x16
+ * 'D' -> 0x07
  */
-void GPIO_Toggle_INIT(void)
-{
-    GPIO_InitTypeDef GPIO_InitStructure = {0};
 
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-    GPIO_Init(GPIOA, &GPIO_InitStructure);
-}
+/*
+ * @Note
+ * In addition, when the system frequency is selected as the USB clock source, only 144MHz/96MHz/48MHz
+ * are supported.
+ */
 
+
+/*******************************************************************************/
+/* Header Files */
+#include "ch32v20x_usbfs_device.h"
+#include "usbd_composite_km.h"
 
 /*********************************************************************
  * @fn      main
  *
- * @brief   Main program.
+ * @brief   Main program
  *
  * @return  none
  */
-int main(void)
+int main( void )
 {
-    //USB
-	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
-	Delay_Init(); 
-    USART_Printf_Init(115200);
-	// printf("SystemClk:%d\r\n",SystemCoreClock);
-	// printf("USBHD Compatibility HID Example\r\n");
-    /* Variables init */
-	Var_Init();
+    /* Initialize system configuration */
+    NVIC_PriorityGroupConfig( NVIC_PriorityGroup_2 );
+	Delay_Init( );
+	USART_Printf_Init( 115200 ); // PA10/TIM1_CH3
+	printf( "SystemClk:%d\r\n", SystemCoreClock );
 
-    /* UART2 init */
-    UART2_Init();
-    UART2_DMA_Init();
+	/* Initialize USART2 for receiving the specified keyboard data */
+	USART2_Init( 115200 );
+	printf( "USART2 Init OK!\r\n" );
 
-    /* Timer init */
-    TIM2_Init();
+	/* Initialize GPIO for keyboard scan */
+	KB_Scan_Init( );
+	KB_Sleep_Wakeup_Cfg( );
+	printf( "KB Scan Init OK!\r\n" );
 
-    /* USBD init */
-    Set_USBConfig();
-    USB_Init();
-    USB_Interrupts_Config();
-    
-    while(1)
+	/* Initialize GPIO for mouse scan */
+	MS_Scan_Init( );
+	MS_Sleep_Wakeup_Cfg( );
+	printf( "MS Scan Init OK!\r\n" );
+
+	/* Initialize timer for Keyboard and mouse scan timing */
+	TIM3_Init( 1, SystemCoreClock / 10000 - 1 );
+	printf( "TIM3 Init OK!\r\n" );
+
+	/* Initialize USBHD interface to communicate with the host  */
+	USBFS_RCC_Init( );
+	USBFS_Device_Init( ENABLE );
+	USB_Sleep_Wakeup_CFG( );
+
+	printf("USBHD Composite KM Device Test\r\n");
+
+	while( 1 )
     {
-        if( bDeviceState == CONFIGURED )
-        {
-            UART2_Rx_Service();
-            UART2_Tx_Service();
-        }
+	    if( USBFS_DevEnumStatus )
+	    {
+	        /* Handle keyboard scan data */
+	        KB_Scan_Handle(  );
+
+	        /* Handle keyboard lighting */
+	        KB_LED_Handle( );
+
+            /* Handle mouse scan data */
+            MS_Scan_Handle( );
+
+            /* Handle USART2 receiving data */
+            USART2_Receive_Handle( );
+	    }
     }
-
-    //LED
-    u8 i = 0;
-    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
-    SystemCoreClockUpdate();
-    Delay_Init();
-#if 0
-    USART_Printf_Init(115200);
-    printf("SystemClk:%d\r\n", SystemCoreClock);
-
-    printf("GPIO Toggle TEST\r\n");
-#endif
-    GPIO_Toggle_INIT();
-    // GPIO_WriteBit(GPIOA, GPIO_Pin_1, Bit_RESET);
-    while(1)
-    {
-        Delay_Ms(500);
-        GPIO_WriteBit(GPIOA, GPIO_Pin_1, (i == 0) ? (i = Bit_SET) : (i = Bit_RESET));
-        // GPIO_WriteBit(GPIOB, GPIO_Pin_8, (i == 0) ? (i = Bit_SET) : (i = Bit_RESET));
-    }
-
 }
-

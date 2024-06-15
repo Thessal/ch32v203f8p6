@@ -48,21 +48,11 @@ CH32V_firmware_library/Peripheral/src/ch32v20x_flash.c \
 CH32V_firmware_library/Peripheral/src/ch32v20x_iwdg.c \
 User/main.c \
 User/system_ch32v20x.c \
+User/usbd_compostie_km.c\
 User/ch32v20x_it.c \
-User/usbd_compatibility_hid.c \
-User/USBLIB/CONFIG/usb_prop.c \
-User/USBLIB/CONFIG/hw_config.c \
-User/USBLIB/CONFIG/usb_istr.c \
-User/USBLIB/CONFIG/usb_pwr.c \
-User/USBLIB/CONFIG/usb_endp.c \
-User/USBLIB/CONFIG/usb_desc.c \
-User/USBLIB/USB-Driver/src/usb_init.c \
-User/USBLIB/USB-Driver/src/usb_sil.c \
-User/USBLIB/USB-Driver/src/usb_regs.c \
-User/USBLIB/USB-Driver/src/usb_core.c \
-User/USBLIB/USB-Driver/src/usb_int.c \
-User/USBLIB/USB-Driver/src/usb_mem.c \
-# User/USBLIB/CONFIG/*.c \
+User/usbd_desc.c \
+User/ch32v20x_usbfs_device.c \
+
 
 # ASM sources
 ASM_SOURCES =  \
@@ -101,8 +91,6 @@ C_INCLUDES =  \
 -ICH32V_firmware_library/Peripheral/inc \
 -ICH32V_firmware_library/Debug \
 -ICH32V_firmware_library/Core \
--IUser/USBLIB/USB-Driver/inc \
--IUser/USBLIB/CONFIG \
 -IUser
 
 # compile gcc flags
@@ -172,7 +160,7 @@ program: $(BUILD_DIR)/$(TARGET).elf
 	sudo wch-openocd -f /usr/share/wch-openocd/openocd/scripts/interface/wch-riscv.cfg -c "program $(BUILD_DIR)/$(TARGET).elf verify reset exit"
 
 isp: $(BUILD_DIR)/$(TARGET).bin
-	wchisp flash $(BUILD_DIR)/$(TARGET).bin
+	wlink reset; wlink flash $(BUILD_DIR)/$(TARGET).bin
 
 #######################################
 # clean up
