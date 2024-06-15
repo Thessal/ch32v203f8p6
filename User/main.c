@@ -45,6 +45,19 @@
  */
 int main( void )
 {
+    // /* PLL */
+    // // Configure the PLL to use HSI as source and multiply by 12 (8 MHz * 12 = 96 MHz / 2 = 48 MHz)
+    // RCC_PLLConfig(RCC_PLLSource_HSI_Div2, RCC_PLLMul_12);
+    // // Enable PLL
+    // RCC_PLLCmd(ENABLE);    // Wait till PLL is ready
+    // while (RCC_GetFlagStatus(RCC_FLAG_PLLRDY) == RESET);
+    // // Select PLL as system clock source
+    // RCC_SYSCLKConfig(RCC_SYSCLKSource_PLLCLK);
+    // // Wait till PLL is used as system clock source
+    // while (RCC_GetSYSCLKSource() != 0x08);
+    // RCC_USBCLKConfig(RCC_USBCLKSource_PLLCLK_Div1);
+    // printf( "PLL:%d\r\n", RCC_GetSYSCLKSource());
+
     /* Initialize system configuration */
     NVIC_PriorityGroupConfig( NVIC_PriorityGroup_2 );
 	Delay_Init( );
@@ -70,7 +83,8 @@ int main( void )
 	printf( "TIM3 Init OK!\r\n" );
 
 	/* Initialize USBHD interface to communicate with the host  */
-	USBFS_RCC_Init( );
+    // Configure USB clock source to be PLL clock divided by 1.5
+	USBFS_RCC_Init( ); // Enable USB clock
 	USBFS_Device_Init( ENABLE );
 	USB_Sleep_Wakeup_CFG( );
 

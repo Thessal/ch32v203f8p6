@@ -160,7 +160,7 @@ program: $(BUILD_DIR)/$(TARGET).elf
 	sudo wch-openocd -f /usr/share/wch-openocd/openocd/scripts/interface/wch-riscv.cfg -c "program $(BUILD_DIR)/$(TARGET).elf verify reset exit"
 
 isp: $(BUILD_DIR)/$(TARGET).bin
-	wlink reset; wlink flash $(BUILD_DIR)/$(TARGET).bin
+	wlink reset; wlink erase --speed low; wlink reset; wlink flash $(BUILD_DIR)/$(TARGET).bin --speed low; wlink reset
 
 #######################################
 # clean up
