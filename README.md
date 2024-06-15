@@ -33,3 +33,6 @@ To build the project, type `make`.
 
 
 https://github.com/xpack-dev-tools/riscv-none-embed-gcc-xpack/releases/download/v10.2.0-1.2/xpack-riscv-none-embed-gcc-10.2.0-1.2-linux-arm64.tar.gz
+
+wlink flash build/ch32v203f8p6.bin
+make; wlink reset; wlink erase; wlink reset; wlink flash build/ch32v203f8p6.bin
